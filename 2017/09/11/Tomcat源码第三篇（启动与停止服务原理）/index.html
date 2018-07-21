@@ -79,16 +79,17 @@
 
 
 
-<meta name="description" content="燃烧陨石的博客">
-<meta property="og:type" content="website">
-<meta property="og:title" content="开源技术  乐于分享">
-<meta property="og:url" content="http://Emotion-maxfeng.github.io/Iblog/index.html">
+<meta name="description" content="前言：熟悉Tomcat的工程师们，肯定都知道Tomcat是如何启动与停止的。对于startup.sh、startup.bat、shutdown.sh、shutdown.bat等脚本或者批处理命令，大家一定知道改如何使用它，但是它们究竟是如何实现的，尤其是shutdown.sh脚本（或者shutdown.bat）究竟是如何和Tomcat进程通信的呢？本文将通过对Tomcat7.0的源码阅读，深入剖析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat源码第三篇（启动与停止服务原理）">
+<meta property="og:url" content="http://Emotion-maxfeng.github.io/Iblog/2017/09/11/Tomcat源码第三篇（启动与停止服务原理）/index.html">
 <meta property="og:site_name" content="开源技术  乐于分享">
-<meta property="og:description" content="燃烧陨石的博客">
+<meta property="og:description" content="前言：熟悉Tomcat的工程师们，肯定都知道Tomcat是如何启动与停止的。对于startup.sh、startup.bat、shutdown.sh、shutdown.bat等脚本或者批处理命令，大家一定知道改如何使用它，但是它们究竟是如何实现的，尤其是shutdown.sh脚本（或者shutdown.bat）究竟是如何和Tomcat进程通信的呢？本文将通过对Tomcat7.0的源码阅读，深入剖析">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-21T09:10:23.498Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="开源技术  乐于分享">
-<meta name="twitter:description" content="燃烧陨石的博客">
+<meta name="twitter:title" content="Tomcat源码第三篇（启动与停止服务原理）">
+<meta name="twitter:description" content="前言：熟悉Tomcat的工程师们，肯定都知道Tomcat是如何启动与停止的。对于startup.sh、startup.bat、shutdown.sh、shutdown.bat等脚本或者批处理命令，大家一定知道改如何使用它，但是它们究竟是如何实现的，尤其是shutdown.sh脚本（或者shutdown.bat）究竟是如何和Tomcat进程通信的呢？本文将通过对Tomcat7.0的源码阅读，深入剖析">
 
 
 
@@ -118,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="http://Emotion-maxfeng.github.io/Iblog/"/>
+  <link rel="canonical" href="http://Emotion-maxfeng.github.io/Iblog/2017/09/11/Tomcat源码第三篇（启动与停止服务原理）/"/>
 
 
 
 
 
-  <title>开源技术  乐于分享</title>
+  <title>Tomcat源码第三篇（启动与停止服务原理） | 开源技术  乐于分享</title>
   
 
 
@@ -143,8 +144,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -237,9 +237,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -269,9 +269,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/Iblog/2017/09/11/Tomcat源码第三篇（启动与停止服务原理）/" itemprop="url">Tomcat源码第三篇（启动与停止服务原理）</a></h1>
+          <h1 class="post-title" itemprop="name headline">Tomcat源码第三篇（启动与停止服务原理）</h1>
         
 
         <div class="post-meta">
@@ -321,9 +319,7 @@
       
 
       
-        
-          
-            <p><strong>前言：</strong><br>熟悉Tomcat的工程师们，肯定都知道Tomcat是如何启动与停止的。对于startup.sh、startup.bat、shutdown.sh、shutdown.bat等脚本或者批处理命令，大家一定知道改如何使用它，但是它们究竟是如何实现的，尤其是shutdown.sh脚本（或者shutdown.bat）究竟是如何和Tomcat进程通信的呢？本文将通过对Tomcat7.0的源码阅读，深入剖析这一过程。</p>
+        <p><strong>前言：</strong><br>熟悉Tomcat的工程师们，肯定都知道Tomcat是如何启动与停止的。对于startup.sh、startup.bat、shutdown.sh、shutdown.bat等脚本或者批处理命令，大家一定知道改如何使用它，但是它们究竟是如何实现的，尤其是shutdown.sh脚本（或者shutdown.bat）究竟是如何和Tomcat进程通信的呢？本文将通过对Tomcat7.0的源码阅读，深入剖析这一过程。</p>
 <p><strong>启动命令：</strong></p>
 <p>./startup.sh</p>
 <p><strong>startup.sh的代码清单如下：</strong></p>
@@ -886,8 +882,6 @@ public void stop() {
 }
 </code></pre><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过对Tomcat源码的分析我们了解到Tomcat的启动和停止都离不开org.apache.catalina.startup.Bootstrap。当停止Tomcat时，已经启动的Tomcat作为socket服务端，停止脚本启动的Bootstrap进程作为socket客户端向服务端发送shutdown命令，两个进程通过共享server.xml里Server标签的端口以及地址信息打通了socket的通信。</p>
 
-          
-        
       
     </div>
     
@@ -904,399 +898,28 @@ public void stop() {
       
 
       
-
-      
-
       
       
-        <div class="post-eof"></div>
+
       
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/08/14/Tomcat源码第二篇（Service和Server之间的关系/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="马雪峰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/Iblog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="开源技术  乐于分享">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/Iblog/2017/08/14/Tomcat源码第二篇（Service和Server之间的关系/" itemprop="url">Tomcat源码第二篇（Service和Server之间的关系）</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-14T18:50:40+08:00">
-                2017-08-14
-              </time>
+              <a href="/Iblog/2017/08/14/Tomcat源码第二篇（Service和Server之间的关系/" rel="next" title="Tomcat源码第二篇（Service和Server之间的关系）">
+                <i class="fa fa-chevron-left"></i> Tomcat源码第二篇（Service和Server之间的关系）
+              </a>
             
+          </div>
 
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <p><strong>server和service的作用是什么？</strong><br>Catalina主要包括connector和container两个模块，connector负责接收请求，传递给container，而container负责处理请求。service的作用是统一管理connector和container，一个service可以包括多个connector和一个container。而server的作用是，管理所有的service，一个server可以包括多个service。server负责管理所有service的生命周期，这样就管理了所有的connector和container，以及connector和container的所有内部组件。这样就不需要单独对connector和container单独进行开启或关闭了。<br><strong>主要流程</strong><br>初始化server：</p>
-<pre><code>/**
- * Invoke a pre-startup initialization. This is used to allow connectors
- * to bind to restricted ports under Unix operating environments.
- */
-public void initialize()
-throws LifecycleException {
-    if (initialized)
-        throw new LifecycleException (
-            sm.getString(&quot;standardServer.initialize.initialized&quot;));
-    initialized = true;
-
-    // Initialize our defined Services
-    for (int i = 0; i &lt; services.length; i++) {
-        services[i].initialize();
-    }
-}
-</code></pre><p>初始化Service</p>
-<pre><code>/**
- * Invoke a pre-startup initialization. This is used to allow connectors
- * to bind to restricted ports under Unix operating environments.
- */
-public void initialize()
-throws LifecycleException {
-    if (initialized)
-        throw new LifecycleException (
-            sm.getString(&quot;standardService.initialize.initialized&quot;));
-    initialized = true;
-
-    // Initialize our defined Connectors
-    synchronized (connectors) {
-            for (int i = 0; i &lt; connectors.length; i++) {
-                connectors[i].initialize();
-            }
-    }
-}
-启动Server
-  /**
- * Prepare for the beginning of active use of the public methods of this
- * component.  This method should be called before any of the public
- * methods of this component are utilized.  It should also send a
- * LifecycleEvent of type START_EVENT to any registered listeners.
- *
- * @exception LifecycleException if this component detects a fatal error
- *  that prevents this component from being used
- */
-public void start() throws LifecycleException {
-
-    // Validate and update our current component state
-    if (started)
-        throw new LifecycleException
-            (sm.getString(&quot;standardServer.start.started&quot;));
-    // Notify our interested LifecycleListeners
-    lifecycle.fireLifecycleEvent(BEFORE_START_EVENT, null);
-
-    lifecycle.fireLifecycleEvent(START_EVENT, null);
-    started = true;
-
-    // Start our defined Services
-    synchronized (services) {
-        for (int i = 0; i &lt; services.length; i++) {
-            if (services[i] instanceof Lifecycle)
-                ((Lifecycle) services[i]).start();
-        }
-    }
-
-    // Notify our interested LifecycleListeners
-    lifecycle.fireLifecycleEvent(AFTER_START_EVENT, null);
-}
-启动service
-    /**
- * Prepare for the beginning of active use of the public methods of this
- * component.  This method should be called before any of the public
- * methods of this component are utilized.  It should also send a
- * LifecycleEvent of type START_EVENT to any registered listeners.
- *
- * @exception LifecycleException if this component detects a fatal error
- *  that prevents this component from being used
- */
-public void start() throws LifecycleException {
-
-    // Validate and update our current component state
-    if (started) {
-        throw new LifecycleException
-            (sm.getString(&quot;standardService.start.started&quot;));
-    }
-
-    // Notify our interested LifecycleListeners
-    lifecycle.fireLifecycleEvent(BEFORE_START_EVENT, null);
-
-    System.out.println
-        (sm.getString(&quot;standardService.start.name&quot;, this.name));
-    lifecycle.fireLifecycleEvent(START_EVENT, null);
-    started = true;
-
-    // Start our defined Container first
-    if (container != null) {
-        synchronized (container) {
-            if (container instanceof Lifecycle) {
-                ((Lifecycle) container).start();
-            }
-        }
-    }
-
-    // Start our defined Connectors second
-    synchronized (connectors) {
-        for (int i = 0; i &lt; connectors.length; i++) {
-            if (connectors[i] instanceof Lifecycle)
-                ((Lifecycle) connectors[i]).start();
-        }
-    }
-
-    // Notify our interested LifecycleListeners
-    lifecycle.fireLifecycleEvent(AFTER_START_EVENT, null);
-
-}
-</code></pre><p> server.await()，监听8005端口消息，若收到shutdown命令，就关闭serversocket，并返回。Bootstrap.main()中，从StandardServer.await()返回后，会执行StandardServer.stop()，就可以关闭所有service了。</p>
-<pre><code> /**
- * Wait until a proper shutdown command is received, then return.
- */
-public void await() {
-
-    // Set up a server socket to wait on
-    // 监听8005端口
-    ServerSocket serverSocket = null;
-    try {
-        serverSocket =
-            new ServerSocket(port, 1,
-                             InetAddress.getByName(&quot;127.0.0.1&quot;));
-    } catch (IOException e) {
-        System.err.println(&quot;StandardServer.await: create[&quot; + port
-                           + &quot;]: &quot; + e);
-        e.printStackTrace();
-        System.exit(1);
-    }
-
-    // Loop waiting for a connection and a valid command
-    while (true) {
-
-        // Wait for the next connection
-        Socket socket = null;
-        InputStream stream = null;
-        try {
-            socket = serverSocket.accept();
-            socket.setSoTimeout(10 * 1000);  // Ten seconds
-            stream = socket.getInputStream();
-        } catch (AccessControlException ace) {
-            System.err.println(&quot;StandardServer.accept security exception: &quot;
-                               + ace.getMessage());
-            continue;
-        } catch (IOException e) {
-            System.err.println(&quot;StandardServer.await: accept: &quot; + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // Read a set of characters from the socket
-        StringBuffer command = new StringBuffer();
-        int expected = 1024; // Cut off to avoid DoS attack
-        while (expected &lt; shutdown.length()) {
-            if (random == null)
-                random = new Random(System.currentTimeMillis());
-            expected += (random.nextInt() % 1024);
-        }
-        while (expected &gt; 0) {
-            int ch = -1;
-            try {
-                ch = stream.read();
-            } catch (IOException e) {
-                System.err.println(&quot;StandardServer.await: read: &quot; + e);
-                e.printStackTrace();
-                ch = -1;
-            }
-            if (ch &lt; 32)  // Control character or EOF terminates loop
-                break;
-            command.append((char) ch);
-            expected--;
-        }
-
-        // Close the socket now that we are done with it
-        try {
-            socket.close();
-        } catch (IOException e) {
-            ;
-        }
-
-        // Match against our command string
-        System.out.println(&quot;[StandardServer] command: &quot; + command);
-        boolean match = command.toString().equals(shutdown);
-        if (match) {
-            break;
-        } else
-            System.err.println(&quot;StandardServer.await: Invalid command &apos;&quot; +
-                               command.toString() + &quot;&apos; received&quot;);
-
-    }
-
-    // Close the server socket and return
-    try {
-        serverSocket.close();
-    } catch (IOException e) {
-        ;
-    }
-
-}
-</code></pre><p>一个service可以包括多个connector和一个container，一个connector收到请求后将它发给container处理，service怎么样将connector和container关联起来呢？<br>在service.setContainer()中，会关联二者。</p>
-<pre><code>/**
- * Set the &lt;code&gt;Container&lt;/code&gt; that handles requests for all
- * &lt;code&gt;Connectors&lt;/code&gt; associated with this Service.
- *
- * @param container The new Container
- */
-public void setContainer(Container container) {
-
-    Container oldContainer = this.container;
-    if ((oldContainer != null) &amp;&amp; (oldContainer instanceof Engine))
-        ((Engine) oldContainer).setService(null);
-    this.container = container;
-    if ((this.container != null) &amp;&amp; (this.container instanceof Engine))
-        ((Engine) this.container).setService(this);
-    if (started &amp;&amp; (this.container != null) &amp;&amp;
-        (this.container instanceof Lifecycle)) {
-        try {
-            ((Lifecycle) this.container).start();
-        } catch (LifecycleException e) {
-            ;
-        }
-    }
-    synchronized (connectors) {
-        for (int i = 0; i &lt; connectors.length; i++)
-            connectors[i].setContainer(this.container);
-    }
-    if (started &amp;&amp; (oldContainer != null) &amp;&amp;
-        (oldContainer instanceof Lifecycle)) {
-        try {
-            ((Lifecycle) oldContainer).stop();
-        } catch (LifecycleException e) {
-            ;
-        }
-    }
-
-    // Report this property change to interested listeners
-    support.firePropertyChange(&quot;container&quot;, oldContainer, this.container);
-}
-</code></pre><p>从await()返回后，调用server.stop()</p>
-<pre><code>// Start the new server
-if (server instanceof Lifecycle) {
-  try {
-    server.initialize();
-    ((Lifecycle) server).start();
-    server.await();
-    // the program waits until the await method returns,
-    // i.e. until a shutdown command is received.
-  }
-  catch (LifecycleException e) {
-    e.printStackTrace(System.out);
-  }
-}
-
-// Shut down the server
-if (server instanceof Lifecycle) {
-  try {
-    ((Lifecycle) server).stop();
-  }
-  catch (LifecycleException e) {
-    e.printStackTrace(System.out);
-  }
-}
-</code></pre>
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -1306,346 +929,11 @@ if (server instanceof Lifecycle) {
   </article>
 
 
-    
-      
 
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/07/24/Tomcat源码第一篇（Tomcat基本架构）/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="马雪峰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/Iblog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="开源技术  乐于分享">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/Iblog/2017/07/24/Tomcat源码第一篇（Tomcat基本架构）/" itemprop="url">Tomcat源码第一篇（基本架构）</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-24T18:50:40+08:00">
-                2017-07-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>  Tomcat是java世界非常流行的服务器软件，作为一个java程序员，除了会写两个MVC之外，对于底层的东西一无所知，可能学习底层的东西对于你编写业务代码没有什么用，但是就行侠客相逢，拼实力的时候才知道基础只是扎实，才会胜利！<br>  Tomcat的总体架构图如下图所示：<br>  ![Tomcat组件架构图][1]<br>  [1]: <a href="https://img-blog.csdn.net/20150810083413467" target="_blank" rel="noopener">https://img-blog.csdn.net/20150810083413467</a><br>  <strong>架构模式简单介绍：</strong><br>  Tomcat整个架构是按照组件来进行划分的，顶级组件是Server，Server控制着所有组件的生命周期，包括组件初始化，组件启动运行，组件停止，组件销毁。可以看出主要的组件是Server，Service，Engine，Connector，Container，Context。Server装配多个Service服务，当请求进来之后，Server负责通过一系列的操作将请求交给相应的服务。<br> 在Tomcat的配置文件server.xml可以发现上述的组件的层次结构。</p>
-<pre><code>&lt;?xml version=&apos;1.0&apos; encoding=&apos;utf-8&apos;?&gt;
-&lt;Server port=&quot;8005&quot; shutdown=&quot;SHUTDOWN&quot;&gt;
-  &lt;Listener className=&quot;org.apache.catalina.startup.VersionLoggerListener&quot; /&gt;
-  &lt;!-- Security listener. Documentation at /docs/config/listeners.html
-  &lt;Listener className=&quot;org.apache.catalina.security.SecurityListener&quot; /&gt;
-  --&gt;
-  &lt;!--APR library loader. Documentation at /docs/apr.html --&gt;
-  &lt;Listener className=&quot;org.apache.catalina.core.AprLifecycleListener&quot; SSLEngine=&quot;on&quot; /&gt;
-  &lt;!-- Prevent memory leaks due to use of particular java/javax APIs--&gt;
-  &lt;Listener className=&quot;org.apache.catalina.core.JreMemoryLeakPreventionListener&quot; /&gt;
-  &lt;Listener className=&quot;org.apache.catalina.mbeans.GlobalResourcesLifecycleListener&quot; /&gt;
-  &lt;Listener className=&quot;org.apache.catalina.core.ThreadLocalLeakPreventionListener&quot; /&gt;
-
-  &lt;!-- Global JNDI resources
-       Documentation at /docs/jndi-resources-howto.html
-  --&gt;
-  &lt;GlobalNamingResources&gt;
-    &lt;!-- Editable user database that can also be used by
-         UserDatabaseRealm to authenticate users
-    --&gt;
-    &lt;Resource name=&quot;UserDatabase&quot; auth=&quot;Container&quot;
-              type=&quot;org.apache.catalina.UserDatabase&quot;
-              description=&quot;User database that can be updated and saved&quot;
-              factory=&quot;org.apache.catalina.users.MemoryUserDatabaseFactory&quot;
-              pathname=&quot;conf/tomcat-users.xml&quot; /&gt;
-  &lt;/GlobalNamingResources&gt;
-
-  &lt;!-- A &quot;Service&quot; is a collection of one or more &quot;Connectors&quot; that share
-       a single &quot;Container&quot; Note:  A &quot;Service&quot; is not itself a &quot;Container&quot;,
-       so you may not define subcomponents such as &quot;Valves&quot; at this level.
-       Documentation at /docs/config/service.html
-   --&gt;
-  &lt;Service name=&quot;Catalina&quot;&gt;
-
-    &lt;!--The connectors can use a shared executor, you can define one or more named thread pools--&gt;
-    &lt;!--
-    &lt;Executor name=&quot;tomcatThreadPool&quot; namePrefix=&quot;catalina-exec-&quot;
-        maxThreads=&quot;150&quot; minSpareThreads=&quot;4&quot;/&gt;
-    --&gt;
-
-
-    &lt;!-- A &quot;Connector&quot; represents an endpoint by which requests are received
-         and responses are returned. Documentation at :
-         Java HTTP Connector: /docs/config/http.html (blocking &amp; non-blocking)
-         Java AJP  Connector: /docs/config/ajp.html
-         APR (HTTP/AJP) Connector: /docs/apr.html
-         Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
-    --&gt;
-    &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;
-               connectionTimeout=&quot;20000&quot;
-               redirectPort=&quot;8443&quot; /&gt;
-    &lt;!-- A &quot;Connector&quot; using the shared thread pool--&gt;
-    &lt;!--
-    &lt;Connector executor=&quot;tomcatThreadPool&quot;
-               port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;
-               connectionTimeout=&quot;20000&quot;
-               redirectPort=&quot;8443&quot; /&gt;
-    --&gt;
-    &lt;!-- Define a SSL/TLS HTTP/1.1 Connector on port 8443
-         This connector uses the NIO implementation that requires the JSSE
-         style configuration. When using the APR/native implementation, the
-         OpenSSL style configuration is required as described in the APR/native
-         documentation --&gt;
-    &lt;!--
-    &lt;Connector port=&quot;8443&quot; protocol=&quot;org.apache.coyote.http11.Http11NioProtocol&quot;
-               maxThreads=&quot;150&quot; SSLEnabled=&quot;true&quot; scheme=&quot;https&quot; secure=&quot;true&quot;
-               clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot; /&gt;
-    --&gt;
-
-    &lt;!-- Define an AJP 1.3 Connector on port 8009 --&gt;
-    &lt;Connector port=&quot;8009&quot; protocol=&quot;AJP/1.3&quot; redirectPort=&quot;8443&quot; /&gt;
-
-
-    &lt;!-- An Engine represents the entry point (within Catalina) that processes
-         every request.  The Engine implementation for Tomcat stand alone
-         analyzes the HTTP headers included with the request, and passes them
-         on to the appropriate Host (virtual host).
-         Documentation at /docs/config/engine.html --&gt;
-
-    &lt;!-- You should set jvmRoute to support load-balancing via AJP ie :
-    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot; jvmRoute=&quot;jvm1&quot;&gt;
-    --&gt;
-    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;
-
-      &lt;!--For clustering, please take a look at documentation at:
-          /docs/cluster-howto.html  (simple how to)
-          /docs/config/cluster.html (reference documentation) --&gt;
-      &lt;!--
-      &lt;Cluster className=&quot;org.apache.catalina.ha.tcp.SimpleTcpCluster&quot;/&gt;
-      --&gt;
-
-      &lt;!-- Use the LockOutRealm to prevent attempts to guess user passwords
-           via a brute-force attack --&gt;
-      &lt;Realm className=&quot;org.apache.catalina.realm.LockOutRealm&quot;&gt;
-        &lt;!-- This Realm uses the UserDatabase configured in the global JNDI
-             resources under the key &quot;UserDatabase&quot;.  Any edits
-             that are performed against this UserDatabase are immediately
-             available for use by the Realm.  --&gt;
-        &lt;Realm className=&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;
-               resourceName=&quot;UserDatabase&quot;/&gt;
-      &lt;/Realm&gt;
-
-      &lt;Host name=&quot;localhost&quot;  appBase=&quot;webapps&quot;
-            unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;
-
-        &lt;!-- SingleSignOn valve, share authentication between web applications
-             Documentation at: /docs/config/valve.html --&gt;
-        &lt;!--
-        &lt;Valve className=&quot;org.apache.catalina.authenticator.SingleSignOn&quot; /&gt;
-        --&gt;
-
-        &lt;!-- Access log processes all example.
-             Documentation at: /docs/config/valve.html
-             Note: The pattern used is equivalent to using pattern=&quot;common&quot; --&gt;
-        &lt;Valve className=&quot;org.apache.catalina.valves.AccessLogValve&quot; directory=&quot;logs&quot;
-               prefix=&quot;localhost_access_log&quot; suffix=&quot;.txt&quot;
-               pattern=&quot;%h %l %u %t &amp;quot;%r&amp;quot; %s %b&quot; /&gt;
-      &lt;/Host&gt;
-    &lt;/Engine&gt;
-  &lt;/Service&gt;
-&lt;/Server&gt;
-</code></pre><blockquote>
-<p>可以非常清楚的看到Tomcat容器组件包含层次结构。依据这样的结构我们去分析Tomcat的组件接口结构。<br>Tomcat的顶级接口是Lifecycle。这个接口控制所有组件的生命周期。</p>
-</blockquote>
-<pre><code>public interface Lifecycle {
-/**
- * 下面的常量都是组件生命周期状态的标记
- */
-public static final String BEFORE_INIT_EVENT = &quot;before_init&quot;;
-
-public static final String AFTER_INIT_EVENT = &quot;after_init&quot;;
-
-public static final String START_EVENT = &quot;start&quot;;
-
-public static final String BEFORE_START_EVENT = &quot;before_start&quot;;
-
-public static final String AFTER_START_EVENT = &quot;after_start&quot;;
-
-public static final String STOP_EVENT = &quot;stop&quot;;
-
-public static final String BEFORE_STOP_EVENT = &quot;before_stop&quot;;
-
-public static final String AFTER_STOP_EVENT = &quot;after_stop&quot;;
-
-public static final String AFTER_DESTROY_EVENT = &quot;after_destroy&quot;;
-
-public static final String BEFORE_DESTROY_EVENT = &quot;before_destroy&quot;;
-
-/**
- * 生命周期事件
- */
-public static final String PERIODIC_EVENT = &quot;periodic&quot;;
-
-/**
- * The LifecycleEvent type for the &quot;configure_start&quot; event. Used by those
- * components that use a separate component to perform configuration and
- * need to signal when configuration should be performed - usually after
- * **{@link #BEFORE_START_EVENT} and before {@link #START_EVENT}.**
- */
-public static final String CONFIGURE_START_EVENT = &quot;configure_start&quot;;
-
-/**
- * The LifecycleEvent type for the &quot;configure_stop&quot; event. Used by those
- * components that use a separate component to perform configuration and
- * need to signal when de-configuration should be performed - usually after
- * *{@link #STOP_EVENT} and before {@link #AFTER_STOP_EVENT}.*
- */
-public static final String CONFIGURE_STOP_EVENT = &quot;configure_stop&quot;;
-
-/**
-   添加监听器
- */
-public void addLifecycleListener(LifecycleListener listener);
-
-/**
-  查找所有的组件监听器
- */
-public LifecycleListener[] findLifecycleListeners();
-
-/**
-   移除
- */
-public void removeLifecycleListener(LifecycleListener listener);
-
-/**
- *   初始化
- */
-public void init() throws LifecycleException;
-
-/**
-  启动
- */
-public void start() throws LifecycleException;
-
-/**
- 停止
- */
-public void stop() throws LifecycleException;
-
-/**
-  获取组件状态
- */
-public LifecycleState getState();
-
-public String getStateName();
-
-/**
-  标记接口用于指示应该只使用实例一次
- */
-public interface SingleUse {
-}
-</code></pre><p>}</p>
-<blockquote>
-<p>Tomcat的每个组件之间的通信依赖于事件监听LifecycleEvent。通过事件监听来相互传递信息。Lifecycle的下级重要接口：<br>1：Server: 这个接口主要的作用是设置容器的class加载器，设置端口，设置访问地址，执行杀死容器命令。StandardServer是Server的标准实现。<br>2：Service：跟Container相关，主要负责容器中的服务分配。<br>3: Container：一个Container可以有多个Connector，最重要的作用是将request对象和response对象进行包装。Container包含不同粒度的处理容器，包括Host，Engine，Context，Wrapper。<br>4: Executor这个接口是Lifecycle的直接子接口，同时又继承了java.util.concurrent.Executor这个内库接口。继承java.util.concurrent.Executor内库接口目的主要是Tomcat自身维护了一个线程池，后续会详细介绍Tomcat的线程池，此处先略过。<br>5: LifecycleBase：值得关注的是这是一个抽象类。此处应用了设计模式中的观察者模式，LifecycleBase和LifecycleSuporrt实现了观察者的两个类，触发LifecycleEvent事件时根据当前lifecycle对象创建事件，然后以此通知列表中的监听者。</p>
-</blockquote>
-<p>下一节将深度解析Server和Service的关系。</p>
-
-          
-        
+    <div class="post-spread">
       
     </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
   </div>
-  
-  
-  
-  </article>
-
-
-    
-  </section>
-
-  
 
 
           </div>
@@ -1653,6 +941,10 @@ public interface SingleUse {
 
 
           
+
+  
+
+
 
         </div>
         
@@ -1673,8 +965,17 @@ public interface SingleUse {
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -1725,6 +1026,22 @@ public interface SingleUse {
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#停止过程分析"><span class="nav-number">1.</span> <span class="nav-text">停止过程分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">2.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -1865,6 +1182,10 @@ public interface SingleUse {
 
 
   
+  <script type="text/javascript" src="/Iblog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/Iblog/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
