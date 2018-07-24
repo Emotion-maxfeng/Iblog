@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/Iblog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/Iblog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/Iblog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/Iblog/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/Iblog/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/Iblog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/Iblog/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言全局异常处理对于每一个web应用来说至关重要，尤其对于用户体验而言，java程序猿固然有避免不了的异常错误。异常在java中大致分为两种。第一种就是可预料的错误即Exception，另一种是运行时错误，这个是无法预料的即RuntimeException，比如redis连接超时，内存溢出等等。针对于这样的情况，我们必须做出对应的处理。如今非常流行的MVC框架有SoringMVC和SpringBo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSM处理全局异常和SpringBoot处理全局异常">
+<meta property="og:url" content="http://Emotion-maxfeng.github.io/Iblog/2017/11/23/SpringBoot和SpringMVC如何优雅处理全局异常/index.html">
+<meta property="og:site_name" content="开源技术  乐于分享">
+<meta property="og:description" content="前言全局异常处理对于每一个web应用来说至关重要，尤其对于用户体验而言，java程序猿固然有避免不了的异常错误。异常在java中大致分为两种。第一种就是可预料的错误即Exception，另一种是运行时错误，这个是无法预料的即RuntimeException，比如redis连接超时，内存溢出等等。针对于这样的情况，我们必须做出对应的处理。如今非常流行的MVC框架有SoringMVC和SpringBo">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-24T05:15:09.879Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SSM处理全局异常和SpringBoot处理全局异常">
+<meta name="twitter:description" content="前言全局异常处理对于每一个web应用来说至关重要，尤其对于用户体验而言，java程序猿固然有避免不了的异常错误。异常在java中大致分为两种。第一种就是可预料的错误即Exception，另一种是运行时错误，这个是无法预料的即RuntimeException，比如redis连接超时，内存溢出等等。针对于这样的情况，我们必须做出对应的处理。如今非常流行的MVC框架有SoringMVC和SpringBo">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/Iblog/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://Emotion-maxfeng.github.io/Iblog/2017/11/23/SpringBoot和SpringMVC如何优雅处理全局异常/"/>
+
+
+
+
+
+  <title>SSM处理全局异常和SpringBoot处理全局异常 | 开源技术  乐于分享</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/Iblog/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">开源技术  乐于分享</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">知识就像一杯苦茶，越苦越有味！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/Iblog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/Iblog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/Iblog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/Iblog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/11/23/SpringBoot和SpringMVC如何优雅处理全局异常/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="马雪峰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/Iblog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="开源技术  乐于分享">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">SSM处理全局异常和SpringBoot处理全局异常</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-23T22:25:03+08:00">
+                2017-11-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>全局异常处理对于每一个web应用来说至关重要，尤其对于用户体验而言，java程序猿固然有避免不了的异常错误。异常在java中大致分为两种。第一种就是可预料的错误即Exception，另一种是运行时错误，这个是无法预料的即RuntimeException，比如redis连接超时，内存溢出等等。针对于这样的情况，我们必须做出对应的处理。如今非常流行的MVC框架有SoringMVC和SpringBoot。这两个框架看似都是在使用SpringMVC来做前端控制器，但是他们的异常处理方式有一些差别，所以在此处列出来，防止一些同学搞不清楚。</p>
+<h2 id="1：SpringMVC应用处理异常的方法。"><a href="#1：SpringMVC应用处理异常的方法。" class="headerlink" title="1：SpringMVC应用处理异常的方法。"></a>1：SpringMVC应用处理异常的方法。</h2><p>SpringMVC处理全局异常的方法简单明了。</p>
+<p>第一种基于web.xml进行配置：</p>
+<pre><code>&lt;error-page&gt;
+    &lt;!-- Missing resource --&gt;
+    &lt;error-code&gt;404&lt;/error-code&gt;
+    &lt;location&gt;/Error404.html&lt;/location&gt;
+&lt;/error-page&gt;
+</code></pre><p>第二种基于实现DispacherServlet类，重写设置throwExceptionIfNoHandlerFound属性的方法。<br>将其设置为true，然后再陪@ControllerAdvice和@ExceptionHandler进行异常处理。</p>
+<h2 id="2：SpringBoot应用处理异常方法"><a href="#2：SpringBoot应用处理异常方法" class="headerlink" title="2：SpringBoot应用处理异常方法"></a>2：SpringBoot应用处理异常方法</h2><p>注意：SpringBoot2.0以上提供了两种web框架，一个是SpringMVC，另外一个是WebFlux函数框架（java世界的第一个函数式Web框架有兴趣的同学可以查查资料）。当然在这个地方只说SpringMVC的。</p>
+<h2 id="1：根据SpringBoot集成的模板定义错误页面"><a href="#1：根据SpringBoot集成的模板定义错误页面" class="headerlink" title="1：根据SpringBoot集成的模板定义错误页面"></a>1：根据SpringBoot集成的模板定义错误页面</h2><p>默认情况下，SpringBoot提供了一个/error以合理方式处理所有错误的映射，并将其注册为servlet容器中的“全局”错误页面。对于计算机客户端，它会生成一个JSON响应，其中包含错误，HTTP状态和异常消息的详细信息。对于浏览器客户端，有一个“whitelabel”错误视图，以HTML格式呈现相同的数据（以自定义它，添加View解析后的数据error）。要完全替换默认行为，您可以实现 ErrorController并注册该类型的bean定义，或者添加类型的bean   ErrorAttributes以使用现有机制但替换内容。<br>在BasicErrorController可以用作自定义基类 ErrorController。如果要为新内容类型添加处理程序（默认情况下是text/html专门处理并为其他所有内容提供后备），这将特别有用。为此，请扩展BasicErrorController，添加@RequestMapping具有produces属性的公共方法 ，并创建新类型的bean。</p>
+<p>SpringBoot默认实现了接口ErrorController。ErrorController专门用户映射复杂的异常错误。BaseErrorController映射的错误路径为<br>${server.error.path:${error.path:/error}}，这是Spring的EL表达式。<br>表示的是对应SpringBoot默认模板的错误页面，即是在resources下的文件夹error中的404.html。具体可查阅官方文档，默认的页面类型是text/html,这样使得我们可以自定义错误页面。<br>当前映射到的error可以是jsp视图，也可以是控制器模型映射。非常方便。</p>
+<p>##:2：SpringBoot中更灵活的异常处理方式 基于@ExceptionHandler ##</p>
+<p>SpringBoot中提供了@ExceptionHandler注解，这样我们就可以针对于不同的错误进行不同的处理，不论是返回错误页面还是JSON数据类型。<br>如下代码所示：</p>
+<pre><code>package com.maxfeng.ubuntu.core.exception;
+
+import com.maxfeng.ubuntu.system.common.model.JsonResult;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LockedAccountException;
+import org.apache.shiro.codec.CodecException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.xml.ws.Response;
+import java.net.SocketTimeoutException;
+
+/**
+ * Author:MaXueFeng  2017/7/23
+ * &lt;p&gt;
+ * 全局异常处理
+ */
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+   /* @ExceptionHandler(value = {RuntimeException.class})
+    @ResponseBody
+    public ResponseEntity&lt;?&gt; handlerRuntimeException(Exception e){
+        return ResponseEntity.ok().body(&quot;服务器异常&quot;);
+    }
+
+    @ExceptionHandler(value = {Exception.class})
+    @ResponseBody
+    public ResponseEntity&lt;?&gt; handlerException(Exception e){
+        return ResponseEntity.ok().body(&quot;服务器异常&quot;);
+    }*/
+
+    @ExceptionHandler(value = {AuthenticationException.class, IncorrectCredentialsException.class})
+    @ResponseBody
+    public ResponseEntity&lt;JsonResult&gt; handlerLoginException() {
+        JsonResult jsonResult = new JsonResult();
+        jsonResult.setStatus(403);
+        jsonResult.setMessage(&quot;账号或者密码错误&quot;);
+        return ResponseEntity.ok(jsonResult);
+    }
+
+    @ExceptionHandler(value = {LockedAccountException.class})
+    @ResponseBody
+    public ResponseEntity&lt;JsonResult&gt; handlerLockedException() {
+        JsonResult jsonResult = new JsonResult();
+        jsonResult.setStatus(403);
+        jsonResult.setMessage(&quot;账号被冻结&quot;);
+        return ResponseEntity.ok(jsonResult);
+    }
+
+    @ExceptionHandler(value = {SocketTimeoutException.class})
+    @ResponseBody
+    public ResponseEntity&lt;JsonResult&gt; handlerRedisTimeOutException() {
+        JsonResult jsonResult = new JsonResult();
+        jsonResult.setStatus(500);
+        jsonResult.setMessage(&quot;redis链接超时&quot;);
+        logger.error(&quot;socket读取超时  问题很严重哦！&quot;);
+        return ResponseEntity.ok(jsonResult);
+    }
+
+    @ExceptionHandler(value = {CodecException.class})
+    @ResponseBody
+    public ResponseEntity&lt;JsonResult&gt; handlerCodeException(Throwable t) {
+        JsonResult jsonResult = new JsonResult();
+        jsonResult.setStatus(400);
+        jsonResult.setMessage(t.getMessage());
+        return ResponseEntity.ok(jsonResult);
+    }
+}
+</code></pre><p>不论是运行时异常还是预料之内的异常都可以进行处理。</p>
+<h2 id="SpringBoot基于异常解析器的异常处理"><a href="#SpringBoot基于异常解析器的异常处理" class="headerlink" title="SpringBoot基于异常解析器的异常处理"></a>SpringBoot基于异常解析器的异常处理</h2><p>package com.maxfeng.ubuntu.core.exception;</p>
+<p>import org.springframework.stereotype.Controller;<br>import org.springframework.web.servlet.HandlerExceptionResolver;<br>import org.springframework.web.servlet.ModelAndView;</p>
+<p>import javax.servlet.http.HttpServletRequest;<br>import javax.servlet.http.HttpServletResponse;</p>
+<p>/**</p>
+<ul>
+<li><p>Author： 橘温暖茶  时间：2017/7/27<br>*/<br>@Controller<br>public class CustomExceptionResolver implements HandlerExceptionResolver {</p>
+<p> @Override<br> public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {</p>
+<pre><code>ModelAndView modelAndView = new ModelAndView();
+if (ex instanceof RuntimeException){
+    modelAndView.setViewName(&quot;cms/login&quot;);
+}else{
+    ...
+}
+return modelAndView;
+</code></pre><p> }<br>}</p>
+</li>
+</ul>
+<p>对于这种方式的异常处理需要说明几点。<br>异常解析器在SpringBoot中是一链的形式存在的，如果当前的异常解析解析完成之后返回的状态码还是一个异常的状态码。那么这个异常将继续向上冒泡到其他异常解析器。如果所有的异常解析器都完成之后还是存在异常状态码，那么将会上升到Servlet容器。交给Servlet容器去处理这样的异常。</p>
+<h2 id="重点"><a href="#重点" class="headerlink" title="重点"></a>重点</h2><p>上面三种异常处理方法只有第一种基于模板都不能处理404错误，其他的不能处理404错误。为什么不能解析404错误？<br>原因：DispacherServlet中有一个属性。</p>
+<pre><code>/** Throw a NoHandlerFoundException if no Handler was found to process this request? **/
+    private boolean throwExceptionIfNoHandlerFound = false;
+</code></pre><p>这个属性在默认情况下为false。404异常发生之后并不会抛出异常。<br>为了能让404错误在SpringMVC这个容器中得到处理，不要冒泡到Servlet容器中，我们需要配置SpringBoot的核心文件application.yml或者application.properties。</p>
+<pre><code>spring.mvc.throw-exception-if-no-handler-found=true
+</code></pre><p>这样我们就可以处理404错误了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Iblog/2017/10/14/SSM整合redis集群/" rel="next" title="Shiro整合redis集群（附带集成Shiro）">
+                <i class="fa fa-chevron-left"></i> Shiro整合redis集群（附带集成Shiro）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">马雪峰</p>
+              <p class="site-description motion-element" itemprop="description">燃烧陨石的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/Iblog/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1：SpringMVC应用处理异常的方法。"><span class="nav-number">2.</span> <span class="nav-text">1：SpringMVC应用处理异常的方法。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2：SpringBoot应用处理异常方法"><span class="nav-number">3.</span> <span class="nav-text">2：SpringBoot应用处理异常方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1：根据SpringBoot集成的模板定义错误页面"><span class="nav-number">4.</span> <span class="nav-text">1：根据SpringBoot集成的模板定义错误页面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SpringBoot基于异常解析器的异常处理"><span class="nav-number">5.</span> <span class="nav-text">SpringBoot基于异常解析器的异常处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重点"><span class="nav-number">6.</span> <span class="nav-text">重点</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">马雪峰</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/Iblog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/Iblog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

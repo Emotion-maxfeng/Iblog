@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/Iblog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/Iblog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/Iblog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/Iblog/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/Iblog/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/Iblog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/Iblog/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="准备：  Ubuntu安装redis集群1： 安装ruby环境。 apt-get update apt-get install ruby apt-get install rubygems 2:  下载安装redis wget http://download.redis.io/releases/redis-4.0.10.tar.gz tar xzf redis-4.0.10.tar.gz cd re">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shiro整合redis集群（附带集成Shiro）">
+<meta property="og:url" content="http://Emotion-maxfeng.github.io/Iblog/2017/10/14/SSM整合redis集群/index.html">
+<meta property="og:site_name" content="开源技术  乐于分享">
+<meta property="og:description" content="准备：  Ubuntu安装redis集群1： 安装ruby环境。 apt-get update apt-get install ruby apt-get install rubygems 2:  下载安装redis wget http://download.redis.io/releases/redis-4.0.10.tar.gz tar xzf redis-4.0.10.tar.gz cd re">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-21T10:03:11.631Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Shiro整合redis集群（附带集成Shiro）">
+<meta name="twitter:description" content="准备：  Ubuntu安装redis集群1： 安装ruby环境。 apt-get update apt-get install ruby apt-get install rubygems 2:  下载安装redis wget http://download.redis.io/releases/redis-4.0.10.tar.gz tar xzf redis-4.0.10.tar.gz cd re">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/Iblog/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://Emotion-maxfeng.github.io/Iblog/2017/10/14/SSM整合redis集群/"/>
+
+
+
+
+
+  <title>Shiro整合redis集群（附带集成Shiro） | 开源技术  乐于分享</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/Iblog/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">开源技术  乐于分享</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">知识就像一杯苦茶，越苦越有味！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/Iblog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/Iblog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/Iblog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/Iblog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/10/14/SSM整合redis集群/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="马雪峰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/Iblog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="开源技术  乐于分享">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Shiro整合redis集群（附带集成Shiro）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-14T09:24:26+08:00">
+                2017-10-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>准备：</strong>  Ubuntu安装redis集群<br><strong>1： 安装ruby环境。</strong></p>
+<pre><code>apt-get update
+apt-get install ruby
+apt-get install rubygems
+</code></pre><p><strong>2:  下载安装redis</strong></p>
+<pre><code>wget http://download.redis.io/releases/redis-4.0.10.tar.gz
+tar xzf redis-4.0.10.tar.gz
+cd redis-4.0.10
+make &amp;&amp; make install --prefix=/usr/local/redis (编译安装位置)
+</code></pre><p><strong>3：复制6个编译好的redis</strong></p>
+<pre><code>cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7001
+cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7002
+cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7003
+cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7004
+cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7005
+cp -r /usr/local/redis/  /usr/local/redis-cluster/redis7006
+</code></pre><p>为什么是6个？有兴趣的同学可以去了解下redis的crc16算法。6个redis集群节点三主三从。三是最小的大于1的奇数。所以必须是6个。三个redis节点投票才能判断出那个节点不能用了。</p>
+<p><strong>4：修改每个redis节点的配置文件</strong></p>
+<pre><code>1. 修改端口号  port   
+2. 修改cluster-enabled yes
+</code></pre><p><strong>5：启动所有节点</strong></p>
+<p> 目前启动所有节点，这6个节点之间还不存在任何关系，我们需要到redis的解压目录中去，有一个文件叫做<br> red is-trib.rb，这个文件使用ruby语言编写的。专门用于启动redis集群，分配主从关系。<br> 启动命令：</p>
+<pre><code>./redis-trib.rb create --replicas 1 192.168.56.181:7001 192.168.56.181:7002 192.168.56.18:7003 192.168.56.18:7004  192.168.56.18:7005  192.168.56.18:7006 
+</code></pre><p>命令详解 create是创建一个备份集群节点。1代表每个主节点只有一个备份节点。后面的主机IP对应相应的端口号。到这基本环境就搭建完毕了。</p>
+<p><strong>6：SSM整合Redis集群并且整合Shiro。</strong></p>
+<p>*<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"><br>    <property name="realm" ref="shiroDbRealm"></property><br>    <property name="sessionManager" ref="sessionManager"><br>    <property name="cacheManager" ref="redisCacheManager"><br></property></property></bean></p>
+<p><bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"><br>    <property name="sessionDAO" ref="sessionDAO"><br></property></bean></p>
+<p><bean id="sessionDAO" class="com.zzkx.firegod.redis.IRedisSessionDao"><br>    <property name="redisManager" ref="clusterRedisManager"><br></property></bean></p>
+<p><bean id="redisCacheManager" class="com.zzkx.firegod.redis.IRedisCacheManager"><br>    <property name="redisManager" ref="clusterRedisManager"><br></property></bean><br><!-- 单个节点--></p>
+<p><bean class="org.crazycake.shiro.RedisManager" id="singleRedisManager"><br>    <property name="host" value="39.107.252.141"><br>    <property name="port" value="7000"><br>    <property name="timeout" value="60000"><br>    <property name="expire" value="300000"><br></property></property></property></property></bean><br>&lt;!– 集群节点  – &gt;</p>
+<p><bean id="clusterRedisManager" class="com.zzkx.firegod.redis.IRedisManager"><br>    <property name="jedisCluster" ref="jedisCluster"><br>    <property name="expire" value="300000"><br>    <property name="timeout" value="6000"><br></property></property></property></bean><br><!--连接池配置--></p>
+<p><bean id="jedisPool" class="redis.clients.jedis.JedisPoolConfig"><br>    <property name="maxTotal" value="${redis.maxTotal}"><br>    <property name="maxIdle" value="${redis.maxIdle}"><br>    <property name="maxWaitMillis" value="${redis.maxWait}"><br>    <property name="minIdle" value="${redis.minIdle}"><br></property></property></property></property></bean></p>
+<p><bean class="redis.clients.jedis.JedisCluster" id="jedisCluster"><br>    <constructor-arg name="nodes"><br>        <set><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7001"><br>            </constructor-arg></constructor-arg></bean><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7002"><br>            </constructor-arg></constructor-arg></bean><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7003"><br>            </constructor-arg></constructor-arg></bean><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7004"><br>            </constructor-arg></constructor-arg></bean><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7005"><br>            </constructor-arg></constructor-arg></bean><br>            <bean class="redis.clients.jedis.HostAndPort"><br>                <constructor-arg name="host" value="39.107.252.141"><br>                <constructor-arg name="port" value="7006"><br>            </constructor-arg></constructor-arg></bean><br>        </set><br>    </constructor-arg><br>    <constructor-arg name="poolConfig" ref="jedisPool"><br></constructor-arg></bean>*</p>
+<p><strong>7：集成Shiro代码实现</strong></p>
+<p><strong>1：SessionDao</strong></p>
+<pre><code>import org.apache.shiro.session.Session;
+import org.apache.shiro.session.UnknownSessionException;
+import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
+import org.crazycake.shiro.RedisSessionDAO;
+import org.crazycake.shiro.SerializeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+    /**
+     * Author:MaXueFeng  2017/10/13
+     */
+    public class IRedisSessionDao extends AbstractSessionDAO {
+
+        private static Logger logger = LoggerFactory.getLogger(RedisSessionDAO.class);
+        private IRedisManager redisManager;
+        private String keyPrefix = &quot;shiro_redis_session:&quot;;
+        public IRedisSessionDao() {
+        }
+        public void update(Session session) throws UnknownSessionException {
+            this.saveSession(session);
+        }
+        private void saveSession(Session session) throws UnknownSessionException {
+            if (session != null &amp;&amp; session.getId() != null) {
+                byte[] key = this.getByteKey(session.getId());
+                byte[] value = SerializeUtils.serialize(session);
+                session.setTimeout((long)(this.redisManager.getExpire() * 1000));
+                this.redisManager.set(key, value, this.redisManager.getExpire());
+            } else {
+                logger.error(&quot;session or session id is null&quot;);
+            }
+        }
+        public void delete(Session session) {
+            if (session != null &amp;&amp; session.getId() != null) {
+                this.redisManager.del(this.getByteKey(session.getId()));
+            } else {
+                logger.error(&quot;session or session id is null&quot;);
+            }
+        }
+        public Collection&lt;Session&gt; getActiveSessions() {
+            Set&lt;Session&gt; sessions = new HashSet();
+            Set&lt;byte[]&gt; keys = this.redisManager.keys(this.keyPrefix + &quot;*&quot;);
+            if (keys != null &amp;&amp; keys.size() &gt; 0) {
+                Iterator i$ = keys.iterator();
+
+                while(i$.hasNext()) {
+                    byte[] key = (byte[])i$.next();
+                    Session s = (Session)SerializeUtils.deserialize(this.redisManager.get(key));
+                    sessions.add(s);
+                }
+            }
+            return sessions;
+        }
+        protected Serializable doCreate(Session session) {
+            Serializable sessionId = this.generateSessionId(session);
+            this.assignSessionId(session, sessionId);
+            this.saveSession(session);
+            return sessionId;
+        }
+        protected Session doReadSession(Serializable sessionId) {
+            if (sessionId == null) {
+                logger.error(&quot;session id is null&quot;);
+                return null;
+            } else {
+                Session s = (Session)SerializeUtils.deserialize(this.redisManager.get(this.getByteKey(sessionId)));
+                return s;
+            }
+        }
+        private byte[] getByteKey(Serializable sessionId) {
+            String preKey = this.keyPrefix + sessionId;
+            return preKey.getBytes();
+        }
+        public IRedisManager getRedisManager() {
+            return this.redisManager;
+        }
+        public void setRedisManager(IRedisManager redisManager) {
+            this.redisManager = redisManager;
+            this.redisManager.init();
+        }
+        public String getKeyPrefix() {
+            return this.keyPrefix;
+        }
+        public void setKeyPrefix(String keyPrefix) {
+            this.keyPrefix = keyPrefix;
+        }
+    }
+**2：RedisCache**
+package com.zzkx.firegod.redis;
+
+import org.apache.shiro.cache.Cache;
+import org.apache.shiro.cache.CacheException;
+import org.apache.shiro.util.CollectionUtils;
+import org.crazycake.shiro.SerializeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+
+/**
+ * Author:MaXueFeng  2018/7/13
+ */
+public class IRedisCache&lt;K, V&gt; implements Cache&lt;K, V&gt; {
+
+    private Logger logger;
+    private IRedisManager cache;
+    private String keyPrefix;
+
+    public String getKeyPrefix() {
+        return this.keyPrefix;
+    }
+
+    public void setKeyPrefix(String keyPrefix) {
+        this.keyPrefix = keyPrefix;
+    }
+
+    public IRedisCache(IRedisManager cache) {
+        this.logger = LoggerFactory.getLogger(this.getClass());
+        this.keyPrefix = &quot;shiro_redis_session:&quot;;
+        if (cache == null) {
+            throw new IllegalArgumentException(&quot;Cache argument cannot be null.&quot;);
+        } else {
+            this.cache = cache;
+        }
+    }
+
+    public IRedisCache(IRedisManager cache, String prefix) {
+        this(cache);
+        this.keyPrefix = prefix;
+    }
+
+    private byte[] getByteKey(K key) {
+        if (key instanceof String) {
+            String preKey = this.keyPrefix + key;
+            return preKey.getBytes();
+        } else {
+            return SerializeUtils.serialize(key);
+        }
+    }
+
+    public V get(K key) throws CacheException {
+        logger.info(&quot;===============================================&quot;);
+        logger.info(&quot;===============================================&quot;);
+        logger.info(&quot;===============================================&quot;);
+        logger.info(&quot;===============================================&quot;);
+        logger.info(&quot;===============================================&quot;);
+        this.logger.debug(&quot;根据key从Redis中获取对象 key [&quot; + key + &quot;]&quot;);
+
+        try {
+            if (key == null) {
+                return null;
+            } else {
+                byte[] rawValue = this.cache.get(this.getByteKey(key));
+                V value = (V) SerializeUtils.deserialize(rawValue);
+                return value;
+            }
+        } catch (Throwable var4) {
+            throw new CacheException(var4);
+        }
+    }
+
+    public V put(K key, V value) throws CacheException {
+        this.logger.debug(&quot;根据key从存储 key [&quot; + key + &quot;]&quot;);
+
+        try {
+            this.cache.set(this.getByteKey(key), SerializeUtils.serialize(value));
+            return value;
+        } catch (Throwable var4) {
+            throw new CacheException(var4);
+        }
+    }
+
+    public V remove(K key) throws CacheException {
+        this.logger.debug(&quot;从redis中删除 key [&quot; + key + &quot;]&quot;);
+
+        try {
+            V previous = this.get(key);
+            this.cache.del(this.getByteKey(key));
+            return previous;
+        } catch (Throwable var3) {
+            throw new CacheException(var3);
+        }
+    }
+
+    public void clear() throws CacheException {
+        this.logger.debug(&quot;从redis中删除所有元素&quot;);
+
+        try {
+            this.cache.flushDB();
+        } catch (Throwable var2) {
+            throw new CacheException(var2);
+        }
+    }
+
+    public int size() {
+        try {
+            Long longSize = new Long(this.cache.dbSize());
+            return longSize.intValue();
+        } catch (Throwable var2) {
+            throw new CacheException(var2);
+        }
+    }
+
+    public Set&lt;K&gt; keys() {
+        try {
+            Set&lt;byte[]&gt; keys = this.cache.keys(this.keyPrefix + &quot;*&quot;);
+            if (CollectionUtils.isEmpty(keys)) {
+                return Collections.emptySet();
+            } else {
+                Set&lt;K&gt; newKeys = new HashSet();
+                Iterator i$ = keys.iterator();
+
+                while(i$.hasNext()) {
+                    byte[] key = (byte[])i$.next();
+                    newKeys.add((K) key);
+                }
+
+                return newKeys;
+            }
+        } catch (Throwable var5) {
+            throw new CacheException(var5);
+        }
+    }
+
+    public Collection&lt;V&gt; values() {
+        try {
+            Set&lt;byte[]&gt; keys = this.cache.keys(this.keyPrefix + &quot;*&quot;);
+            if (!CollectionUtils.isEmpty(keys)) {
+                List&lt;V&gt; values = new ArrayList(keys.size());
+                Iterator i$ = keys.iterator();
+
+                while(i$.hasNext()) {
+                    byte[] key = (byte[])i$.next();
+                    V value = this.get((K) key);
+                    if (value != null) {
+                        values.add(value);
+                    }
+                }
+
+                return Collections.unmodifiableList(values);
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (Throwable var6) {
+            throw new CacheException(var6);
+        }
+    }
+}
+</code></pre><p><strong>3：CacheManager</strong></p>
+<pre><code>import org.apache.shiro.cache.Cache;
+import org.apache.shiro.cache.CacheException;
+import org.apache.shiro.cache.CacheManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+/**
+ * Author:MaXueFeng  2018/7/13
+ */
+public class IRedisCacheManager implements CacheManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(IRedisCacheManager.class);
+    private final ConcurrentMap&lt;String, Cache&gt; caches = new ConcurrentHashMap();
+    private IRedisManager redisManager;
+    private String keyPrefix = &quot;shiro_redis_cache:&quot;;
+
+    public IRedisCacheManager() {
+    }
+
+    public String getKeyPrefix() {
+        return this.keyPrefix;
+    }
+
+    public void setKeyPrefix(String keyPrefix) {
+        this.keyPrefix = keyPrefix;
+    }
+
+    public &lt;K, V&gt; Cache&lt;K, V&gt; getCache(String name) throws CacheException {
+        logger.debug(&quot;获取名称为: &quot; + name + &quot; 的RedisCache实例&quot;);
+        Cache c = (Cache)this.caches.get(name);
+        if (c == null) {
+            this.redisManager.init();
+            c = new IRedisCache(this.redisManager, this.keyPrefix);
+            this.caches.put(name, c);
+        }
+
+        return (Cache)c;
+    }
+
+    public IRedisManager getRedisManager() {
+        return this.redisManager;
+    }
+
+    public void setRedisManager(IRedisManager redisManager) {
+        this.redisManager = redisManager;
+    }
+}
+</code></pre><p><strong>4：RedisManager</strong></p>
+<pre><code>import redis.clients.jedis.JedisCluster;
+import java.util.Set;
+/**
+ * Author:MaXueFeng  2018/7/13
+ */
+public class IRedisManager {
+    private int expire;
+    private int timeout;
+
+    public void init() {
+        System.out.println(&quot;初始化===================================&quot;);
+    }
+
+    private JedisCluster jedisCluster;
+
+    public JedisCluster getJedisCluster() {
+        return jedisCluster;
+    }
+    public void setJedisCluster(JedisCluster jedisCluster) {
+        this.jedisCluster = jedisCluster;
+    }
+
+    public byte[] get(byte[] key) {
+        byte[] value;
+        try {
+            value = jedisCluster.get(key);
+        } finally {
+            System.out.println(&quot;==============================================&quot;);
+        }
+
+        return value;
+    }
+
+    public byte[] set(byte[] key, byte[] value) {
+        jedisCluster.set(key, value);
+        if (this.expire != 0) {
+            jedisCluster.expire(key, this.expire);
+        }
+        return value;
+    }
+
+    public byte[] set(byte[] key, byte[] value, int expire) {
+
+        try {
+            jedisCluster.set(key, value);
+            if (expire != 0) {
+                jedisCluster.expire(key, expire);
+            }
+        } finally {
+        }
+
+        return value;
+    }
+
+    public void del(byte[] key) {
+
+        try {
+            jedisCluster.del(key);
+        } finally {
+            System.out.println(&quot;==============================================&quot;);
+        }
+
+    }
+
+    public Set&lt;byte[]&gt; keys(String pattern) {
+        Set&lt;byte[]&gt; keys = null;
+
+        try {
+            keys = jedisCluster.hkeys(pattern.getBytes());
+        } finally {
+            System.out.println(&quot;==============================================&quot;);
+        }
+
+        return keys;
+    }
+    public int getExpire() {
+        return this.expire;
+    }
+    public void setExpire(int expire) {
+        this.expire = expire;
+    }
+    public int getTimeout() {
+        return this.timeout;
+    }
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    public void flushDB() {
+        this.jedisCluster.flushDB();
+    }
+    public long dbSize() {
+        return this.jedisCluster.dbSize();
+    }
+}
+</code></pre>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Iblog/2017/09/11/Tomcat源码第三篇（启动与停止服务原理）/" rel="next" title="Tomcat源码第三篇（启动与停止服务原理）">
+                <i class="fa fa-chevron-left"></i> Tomcat源码第三篇（启动与停止服务原理）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/Iblog/2017/11/23/SpringBoot和SpringMVC如何优雅处理全局异常/" rel="prev" title="SSM处理全局异常和SpringBoot处理全局异常">
+                SSM处理全局异常和SpringBoot处理全局异常 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">马雪峰</p>
+              <p class="site-description motion-element" itemprop="description">燃烧陨石的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/Iblog/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">马雪峰</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/Iblog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/Iblog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
