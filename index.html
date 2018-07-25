@@ -252,6 +252,164 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/11/25/SpringBoot应用部署于外置Tomcat容器/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="马雪峰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/Iblog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="开源技术  乐于分享">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/Iblog/2017/11/25/SpringBoot应用部署于外置Tomcat容器/" itemprop="url">SpringBoot应用部署于外置Tomcat容器</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-25T13:53:25+08:00">
+                2017-11-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>SpringBoot使用了内置Tomcat，所以启动项目非常的慢，我们可以再开发期间将SpringBoot应用部署在外置Tomcat容器中。</p>
+<h2 id="1：修改项目打包方式"><a href="#1：修改项目打包方式" class="headerlink" title="1：修改项目打包方式"></a>1：修改项目打包方式</h2><pre><code>&lt;groupId&gt;com.example&lt;/groupId&gt;
+&lt;artifactId&gt;demo&lt;/artifactId&gt;
+&lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+&lt;packaging&gt;war&lt;/packaging&gt;
+</code></pre><h2 id="2：移除内置Tomcat"><a href="#2：移除内置Tomcat" class="headerlink" title="2：移除内置Tomcat"></a>2：移除内置Tomcat</h2><pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+    &lt;!-- 移除嵌入式tomcat插件 --&gt;
+    &lt;exclusions&gt;
+        &lt;exclusion&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-tomcat&lt;/artifactId&gt;
+        &lt;/exclusion&gt;
+    &lt;/exclusions&gt;
+&lt;/dependency&gt;
+</code></pre><h2 id="3：添加servlet-api依赖"><a href="#3：添加servlet-api依赖" class="headerlink" title="3：添加servlet-api依赖"></a>3：添加servlet-api依赖</h2><pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+    &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
+    &lt;scope&gt;provided&lt;/scope&gt;
+&lt;/dependency&gt;
+</code></pre><h2 id="4：修改启动类，并重写初始化方法"><a href="#4：修改启动类，并重写初始化方法" class="headerlink" title="4：修改启动类，并重写初始化方法"></a>4：修改启动类，并重写初始化方法</h2><p>如下代码是SpringBoot应用的启动类，在这个类的同级下重写初始化方法。</p>
+<pre><code>     @SpringBootApplication
+        public class Application {
+            public static void main(String[] args) {
+                SpringApplication.run(Application.class, args);
+            }
+        }
+
+// 修改启动类，继承 SpringBootServletInitializer 并重写 configure 方法，此类相当于web.xml
+public class SpringBootStartApplication extends SpringBootServletInitializer {
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        // 注意这里一定要指向原先用main方法执行的Application启动类
+        return builder.sources(Application.class);
+    }
+}
+</code></pre><h2 id="5-打包验证"><a href="#5-打包验证" class="headerlink" title="5:打包验证"></a>5:打包验证</h2><p>执行mvn clean package,将打的到扔到tomcat中启动，访问测试。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/11/23/SpringBoot和SpringMVC如何优雅处理全局异常/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2571,7 +2729,7 @@ public interface SingleUse {
               
                 <a href="/Iblog/archives/">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
