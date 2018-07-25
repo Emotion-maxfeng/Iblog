@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/Iblog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/Iblog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/Iblog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/Iblog/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/Iblog/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/Iblog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/Iblog/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言：我们完全可以利用java网络编程实现一个简单的Tomcat，之后在这个简单的编程的基础上进行一系列优化，本人在读取源码的过程中遇到了非常多的问题，最大的问题是找不准切入点，那么我们如果有编程模型的话，切入点是非常好找的，废话不多说，先使用Socket写一个Tomcat模型。 class EmotionMaxFengTomcat{    public void handlerClientReq">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat源码第四篇（手写一个Tomcat）">
+<meta property="og:url" content="http://Emotion-maxfeng.github.io/Iblog/2017/12/25/Tomcat源码第四篇（手写一个Tomcat）/index.html">
+<meta property="og:site_name" content="开源技术  乐于分享">
+<meta property="og:description" content="前言：我们完全可以利用java网络编程实现一个简单的Tomcat，之后在这个简单的编程的基础上进行一系列优化，本人在读取源码的过程中遇到了非常多的问题，最大的问题是找不准切入点，那么我们如果有编程模型的话，切入点是非常好找的，废话不多说，先使用Socket写一个Tomcat模型。 class EmotionMaxFengTomcat{    public void handlerClientReq">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-25T10:16:32.852Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tomcat源码第四篇（手写一个Tomcat）">
+<meta name="twitter:description" content="前言：我们完全可以利用java网络编程实现一个简单的Tomcat，之后在这个简单的编程的基础上进行一系列优化，本人在读取源码的过程中遇到了非常多的问题，最大的问题是找不准切入点，那么我们如果有编程模型的话，切入点是非常好找的，废话不多说，先使用Socket写一个Tomcat模型。 class EmotionMaxFengTomcat{    public void handlerClientReq">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/Iblog/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://Emotion-maxfeng.github.io/Iblog/2017/12/25/Tomcat源码第四篇（手写一个Tomcat）/"/>
+
+
+
+
+
+  <title>Tomcat源码第四篇（手写一个Tomcat） | 开源技术  乐于分享</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/Iblog/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">开源技术  乐于分享</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">知识就像一杯苦茶，越苦越有味！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/Iblog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/Iblog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/Iblog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/Iblog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://Emotion-maxfeng.github.io/Iblog/Iblog/2017/12/25/Tomcat源码第四篇（手写一个Tomcat）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="马雪峰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/Iblog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="开源技术  乐于分享">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Tomcat源码第四篇（手写一个Tomcat）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-25T16:47:03+08:00">
+                2017-12-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>我们完全可以利用java网络编程实现一个简单的Tomcat，之后在这个简单的编程的基础上进行一系列优化，本人在读取源码的过程中遇到了非常多的问题，最大的问题是找不准切入点，那么我们如果有编程模型的话，切入点是非常好找的，废话不多说，先使用Socket写一个Tomcat模型。</p>
+<pre><code>class EmotionMaxFengTomcat{
+   public void handlerClientRequest() throws IOException{
+        //绑定端口
+        ServerSocker serverSocket = new ServerSocket(8080);
+        while(true){
+         //接受客户端请求
+        Socket socket = serverSocket.accept();
+        request = socket.getInputStream();
+        response = socket.getOutputStream();
+        ...处理写入一些相应数据
+        }
+   }
+}
+</code></pre><p>上面的代码展示了一个简单的Client与Server端通信的代码，非常简单。但这是最基础的编程模型。我们完全可以在这个基础之上去优化。</p>
+<h2 id="1：优化client发送过来的数据和server响应的数据模型。"><a href="#1：优化client发送过来的数据和server响应的数据模型。" class="headerlink" title="1：优化client发送过来的数据和server响应的数据模型。"></a>1：优化client发送过来的数据和server响应的数据模型。</h2><p>首先最基础的将请求对象和相应对象封装两个类。服务方法调用我们自定义的方法。将请求对象和响应对象放入在Servlet容器中，那么我们完全可以自己手写一个Servlet的基础类。此处代码省略。完成请求之后将response对象<br>包装秤socket对象发送给client。那么久完成了最简单的一次请求响应过程。</p>
+<h2 id="2：优化IO通信方式"><a href="#2：优化IO通信方式" class="headerlink" title="2：优化IO通信方式"></a>2：优化IO通信方式</h2><p>可以更改为NIO的通信方式。Tomcat中的IO实现大概有四种，NIO，BIO，Apr，BIO在这个地方的是阻塞IO通信方式，在Tomcat中的实现类是JIoEndpoint.</p>
+<h2 id="3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。"><a href="#3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。" class="headerlink" title="3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。"></a>3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。</h2><p>在第三篇文章中提到了Tomcat的配置文件server.xml。server.xml中提到了每一个标签源码会在源码中对应一个类，比如Server，Service，Context，Host、Engine，Wrapper等等.<br>我们好多人在server.xml中配置过一个东西，那就是发布项目的路径。如下代码：</p>
+<pre><code>&lt;Context path=&quot;&quot; docBase=&quot;你的项目路径&quot; reloadable=&quot;true&quot;/&gt;
+</code></pre><p>这个标签配置是被包含在Host标签中的，Context是比Host粒度更小的一种概念，既是一个Context就是一个项目，Tomcat可以同时发布多个项目，Host标签也可以有多个Context标签。我还说过依据更重要的话，那就是一个标签对应一个java中的一个类。那么我们去寻找Context这个类。</p>
+<pre><code>/**
+ * A &lt;b&gt;Context&lt;/b&gt; is a Container that represents a servlet context, and
+ * therefore an individual web application, in the Catalina servlet engine.
+ * It is therefore useful in almost every deployment of Catalina (even if a
+ * Connector attached to a web server (such as Apache) uses the web server&apos;s
+ * facilities to identify the appropriate Wrapper to handle this request.
+ * It also provides a convenient mechanism to use Interceptors that see
+ * every request processed by this particular web application.
+ * &lt;p&gt;
+ * The parent Container attached to a Context is generally a Host, but may
+ * be some other implementation, or may be omitted if it is not necessary.
+ * &lt;p&gt;
+ * The child containers attached to a Context are generally implementations
+ * of Wrapper (representing individual servlet definitions).
+ * &lt;p&gt;
+ *
+ * @author Craig R. McClanahan
+ */
+public interface Context extends Container, ContextBind {...}
+</code></pre><p>Context是一个接口，通过翻译注释：可以了解到Context是一个Servlet的上下文容器，他的父容器是Host，是一个单独的web应用程序，上下文是表示servlet上下文的容器因此是一个单独的web应用程序，在Catalina servlet引擎中。因此，它在几乎每一次加泰罗尼亚的部署中都是有用的连接到web服务器(如Apache)的连接器使用web服务器的连接器识别处理此请求的适当包装器的工具。它还提供了使用拦截器的方便机制此特定web应用程序处理的每个请求。连接到上下文的父容器通常是一个主机，但是可以是其他的一些实现，如果没有必要，可以省略。<br>附加到上下文的子容器通常是实现包装器(表示单个servlet定义)。</p>
+<p>依照我们上面的分析思路，启动Tomcat必然先要初始化一系列的组件才可以启动，从上面的注释中我们得到了一个非常有用的信息，那就是跟Context相关的Catania组件。Catania组件是专门启动/停止Tomcat容器的组建类，下面代码所示Catalina的启动类代码：</p>
+<pre><code>/**
+ * Start a new server instance.
+ */
+public void start() {
+    if (getServer() == null) {
+        //加载一个Server实例
+        load();
+    }
+    if (getServer() == null) {
+        log.fatal(&quot;Cannot start server. Server instance is not configured.&quot;);
+        return;
+    }
+    long t1 = System.nanoTime();
+    // Start the new server
+    try {
+        getServer().start();
+    } catch (LifecycleException e) {
+        log.fatal(sm.getString(&quot;catalina.serverStartFail&quot;), e);
+        try {
+            getServer().destroy();
+        } catch (LifecycleException e1) {
+            log.debug(&quot;destroy() failed for failed Server &quot;, e1);
+        }
+        return;
+    }
+    long t2 = System.nanoTime();
+    ...
+}
+</code></pre><p>Catalina第一步就调用了load方法去创建爱你一个新的Server。下面是load方法源码：</p>
+<pre><code>if (loaded) {
+           return;
+       }
+       loaded = true;
+       long t1 = System.nanoTime();
+       initDirs();
+       initNaming();
+       //解析xml配置文件的解析器
+       Digester digester = createStartDigester();
+       InputSource inputSource = null;
+       InputStream inputStream = null;
+       File file = null;
+       try {
+           try {
+               //解析配置文件
+               file = configFile();
+               inputStream = new FileInputStream(file);
+               inputSource = new InputSource(file.toURI().toURL().toString());
+           } catch (Exception e) {
+               if (log.isDebugEnabled()) {
+                   log.debug(sm.getString(&quot;catalina.configFail&quot;, file), e);
+               }
+           }
+          ...
+   }
+</code></pre><p>上面代码很清楚的看到了一个方法configFile(),下面所示configFile方法的源码：</p>
+<pre><code>/**
+ * Return a File object representing our configuration file.
+ */
+protected File configFile() {
+    File file = new File(configFile);
+    if (!file.isAbsolute()) {
+        file = new File(Bootstrap.getCatalinaBase(), configFile);
+    }
+    return (file);
+</code></pre><p>从这个方法看到了catalina解析的配置文件路径名称是configFile这个类变量。下面所示configFile类变量的值。</p>
+<pre><code>/**
+ * Pathname to the server configuration file.
+ */
+protected String configFile = &quot;conf/server.xml&quot;;
+</code></pre><p>看到这个地方欣喜若狂，Tomcat源码启动的第一步是读取conf目录下的server.xml，使用Digester解析器解析配置文件。</p>
+<p>解析配置文件完成之后第一步首先要绑定服务器的端口号，那么绑定端口号的代码去哪里找，聪明的人可能瞬间就想到了Tomcat的Connector组件，不错，Connector组件确实一步就可以找到绑定端口号的代码，那么本人也是不建议这么做的。前面说过了配置文件conf/server.xml一个标签对应一个java类，养成一个寻找源码的好习惯。</p>
+<pre><code>&lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;
+           connectionTimeout=&quot;20000&quot;
+           redirectPort=&quot;8443&quot; /&gt;
+</code></pre><p>这样是不是清晰明了，从上面的connector标签属性可以看到有端口，协议，连接超时时间，重定向端口。我们直接定位到Connector类查看源码。创建Connector对象有两个构造方法。如下：</p>
+<pre><code>public Connector() {
+    this(null);
+}
+public Connector(String protocol) {
+    setProtocol(protocol);
+    // Instantiate protocol handler
+    ProtocolHandler p = null;
+    try {
+        Class&lt;?&gt; clazz = Class.forName(protocolHandlerClassName);
+        p = (ProtocolHandler) clazz.getDeclaredConstructor().newInstance();
+    } catch (Exception e) {
+        log.error(sm.getString(
+                &quot;coyoteConnector.protocolHandlerInstantiationFailed&quot;), e);
+    } finally {
+        this.protocolHandler = p;
+    }
+
+    if (!Globals.STRICT_SERVLET_COMPLIANCE) {
+        URIEncoding = &quot;UTF-8&quot;;
+        URIEncodingLower = URIEncoding.toLowerCase(Locale.ENGLISH);
+    }
+}
+</code></pre><p>两个构造函数相当于一个。解析在创建Connector对象的时候，传入版本协议。构造完成Connector对象之后我们去看Connector的启动连接的处理方法，源码如下：</p>
+<pre><code>/** 通过此连接开始处理请求
+  * Begin processing requests via this Connector.
+  *
+  * @exception LifecycleException if a fatal startup error occurs
+  */
+ @Override
+ protected void startInternal() throws LifecycleException {
+
+     // Validate settings before starting
+     if (getPort() &lt; 0) {
+         throw new LifecycleException(sm.getString(
+                 &quot;coyoteConnector.invalidPort&quot;, Integer.valueOf(getPort())));
+     }
+
+     setState(LifecycleState.STARTING);
+
+     try {
+         //调用端口绑定的方法
+         protocolHandler.start();
+     } catch (Exception e) {
+         String errPrefix = &quot;&quot;;
+         if(this.service != null) {
+             errPrefix += &quot;service.getName(): \&quot;&quot; + this.service.getName() + &quot;\&quot;; &quot;;
+         }
+
+         throw new LifecycleException
+             (errPrefix + &quot; &quot; + sm.getString
+              (&quot;coyoteConnector.protocolHandlerStartFailed&quot;), e);
+     }
+ }
+</code></pre><p>从一行简单的注释可以看到这个方法是启用当前连接对象处理请求，并且调用了端口绑定方法。protocolHandler.start();打开start()方法源码如下。结果我们发现start()这个方法是类ProtocolHandler的方法。这个接口的实现类非常的多，我们究竟去看哪一个？我们去默认实现类AbstractProtocol类中去看。</p>
+<pre><code>@Override
+public void start() throws Exception {
+    if (getLog().isInfoEnabled())
+        getLog().info(sm.getString(&quot;abstractProtocolHandler.start&quot;,
+                getName()));
+    try {
+        //调用AbstractEndpoint的start（）启动连接
+        endpoint.start();
+    } catch (Exception ex) {
+        getLog().error(sm.getString(&quot;abstractProtocolHandler.startError&quot;,
+                getName()), ex);
+        throw ex;
+    }
+}
+</code></pre><p>在trycatch代码快中调用了AbstractEndpoint的start（）方法，start方法源码如下：</p>
+<pre><code>public final void start() throws Exception {
+       if (bindState == BindState.UNBOUND) {
+           bind();
+           bindState = BindState.BOUND_ON_START;
+       }
+       startInternal();
+   }
+</code></pre><p>可以看到它主要先判断端口是否已经被绑定，然后制定bind方法，如果不报异常，给这个端口加个已绑定的标记。bind方法是AbstractEndpoint类提供的，此方法是一个抽象方法，但是AbstractEndpoint子类非常多，我们去哪个类中查看bind方法的实现呢。我们刚开始写了一个java网络编程的一小段代码，我们用到的IO模型是BIO模型（阻塞模型），所以我们去JIoEndpoint这个类中去看,Jio意识就是java IO也就是BIO。<br>我们调到bind的方法查看源码如下：</p>
+<pre><code>@Override
+public void bind() throws Exception {
+
+    // 初始化服务端线程数量
+    if (acceptorThreadCount == 0) {
+        acceptorThreadCount = 1;
+    }
+    // 初始化最大连接数
+    if (getMaxConnections() == 0) {
+        setMaxConnections(getMaxThreadsWithExecutor());
+    }
+    //创建ServerSocket工厂
+    if (serverSocketFactory == null) {
+        if (isSSLEnabled()) {
+            serverSocketFactory =
+                handler.getSslImplementation().getServerSocketFactory(this);
+        } else {
+            serverSocketFactory = new DefaultServerSocketFactory(this);
+        }
+    }
+    if (serverSocket == null) {
+        try {
+            if (getAddress() == null) {
+               //绑定端口
+                serverSocket = serverSocketFactory.createSocket(getPort(),
+                        getBacklog());
+            } else {
+                serverSocket = serverSocketFactory.createSocket(getPort(),
+                        getBacklog(), getAddress());
+            }
+        } catch (BindException orig) {
+            String msg;
+            if (getAddress() == null)
+                msg = orig.getMessage() + &quot; &lt;null&gt;:&quot; + getPort();
+            else
+                msg = orig.getMessage() + &quot; &quot; +
+                        getAddress().toString() + &quot;:&quot; + getPort();
+            BindException be = new BindException(msg);
+            be.initCause(orig);
+            throw be;
+        }
+    }
+}
+</code></pre><p>看到此处才一目了然，这就是最基本的基于BIO的端口绑定的代码。到此处才相当于我们上面写的ServerSocket serverSocket = new ServerSocket(8080);那么接受完请求之后，我们需要处理请求和响应。下一节将继续解析如何接受和处理请求的过程。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Iblog/2017/11/25/SpringBoot应用部署于外置Tomcat容器/" rel="next" title="SpringBoot应用部署于外置Tomcat容器">
+                <i class="fa fa-chevron-left"></i> SpringBoot应用部署于外置Tomcat容器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">马雪峰</p>
+              <p class="site-description motion-element" itemprop="description">燃烧陨石的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/Iblog/archives/">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言："><span class="nav-number">1.</span> <span class="nav-text">前言：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1：优化client发送过来的数据和server响应的数据模型。"><span class="nav-number">2.</span> <span class="nav-text">1：优化client发送过来的数据和server响应的数据模型。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2：优化IO通信方式"><span class="nav-number">3.</span> <span class="nav-text">2：优化IO通信方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。"><span class="nav-number">4.</span> <span class="nav-text">3：依据上面的编程模型，我们就可以开始Tomcat源码的切入点了。</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">马雪峰</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/Iblog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/Iblog/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/Iblog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/Iblog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/Iblog/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
